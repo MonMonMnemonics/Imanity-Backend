@@ -27,6 +27,10 @@ const imageFilter = function(req, file, cb) {
 };
 exports.imageFilter = imageFilter;
 
+
+
+//-------------------------------------------------- IMAGE HOSTING SERVICE --------------------------------------------------
+//  UPLOAD NEW CHAPTER
 app.post('/upload-new', (req, res) => {
     if (!fs.existsSync(headpath)) {
         fs.mkdirSync(headpath, { recursive: true })
@@ -69,7 +73,7 @@ app.post('/upload-new', (req, res) => {
         sortedfiles.sort(function(a, b) {
             return a["filename"] - b["filename"];
         });
-        client.db('Images').collection('Images').insertOne({ Chapter: req.body["ChapterIdx"], Entries: JSON.parse(JSON.stringify(sortedfiles)) });
+        client.db('Images').collection('Images').insertOne({ Chapter: req.body["ChapterIdx"], TimeStamp: Date.now(), Entries: JSON.parse(JSON.stringify(sortedfiles)) });
 
         //console.log(JSON.stringify(sortedfiles));
         //console.log(req.body["ChapterIdx"]);
@@ -78,6 +82,7 @@ app.post('/upload-new', (req, res) => {
     });
 });
 
+//  UPDATE CHAPTER IMAGES
 app.post('/upload-renew', async (req, res) => {
     if (!fs.existsSync(headpath)) {
         fs.mkdirSync(headpath, { recursive: true })
@@ -134,13 +139,14 @@ app.post('/upload-renew', async (req, res) => {
             sortedfiles.sort(function(a, b) {
                 return a["filename"] - b["filename"];
             });
-            client.db('Images').collection('Images').updateOne({ Chapter: { $eq : req.body["ChapterIdx"] } }, { $set: { Entries: JSON.parse(JSON.stringify(sortedfiles)) } });
+            client.db('Images').collection('Images').updateOne({ Chapter: { $eq : req.body["ChapterIdx"] } }, { $set: { TimeStamp: Date.now(), Entries: JSON.parse(JSON.stringify(sortedfiles)) } });
     
             res.send("OK");
         }
     });
 });
 
+//  REMOVE A CHAPTER
 app.post('/remove', async (req, res) => {
     if (!req.body.ChapterIdx) {
         return res.status(400).send("ERROR : UNABLE TO FIND THE ENTRIES");
@@ -161,6 +167,7 @@ app.post('/remove', async (req, res) => {
 
 });
 
+//  FETCH IMAGE
 app.get('/image/:id', (req, res) => {
     if(!req.params.id){
         return res.status(400).send("ERROR : UNABLE TO FIND THE ENTRIES");
@@ -172,6 +179,7 @@ app.get('/image/:id', (req, res) => {
     res.sendFile( __dirname + "/" + headpath + filename);
 })
 
+//  FETCH CHAPTER IMAGE LIST
 app.get('/chapter/:id', async (req, res) => {
     if(!req.params.id){
         return res.status(400).send("ERROR : UNABLE TO FIND THE ENTRIES");
@@ -183,19 +191,31 @@ app.get('/chapter/:id', async (req, res) => {
     }     
     res.send(QueryRes.Entries);
 })
+//================================================== IMAGE HOSTING SERVICE ==================================================
 
-app.get('/', function(req, res) {
-    res.json({ message: 'WELCOME' });   
-});
 
-app.get('/upload',function(req,res){
-    res.sendFile(__dirname + '/index.html');
-   
-  });
+
+//----------------------------------------------------- WEB DATA HANDLER -----------------------------------------------------
+app.get('/recent', async (req, res) => {
+    var QueryRes = await client.db('Images').collection('Images').find({}, {projection: { _id: 0, TimeStamp: 1, Chapter: 1}}).sort( { TimeStamp : -1 } ).limit(10).toArray();
+    if (QueryRes == null){
+        return res.status(400).send("ERROR : UNABLE TO FIND THE ENTRIES");
+    }     
+    res.send(QueryRes);
+})
+
+app.get('/all', async (req, res) => {
+    var QueryRes = await client.db('Images').collection('Images').find({}, {projection: { _id: 0, TimeStamp: 1, Chapter: 1}}).sort( { TimeStamp : -1 } ).toArray();
+    if (QueryRes == null){
+        return res.status(400).send("ERROR : UNABLE TO FIND THE ENTRIES");
+    }     
+    res.send(QueryRes);
+})
+//===================================================== WEB DATA HANDLER =====================================================
+
+
 
 app.listen(PORT, async function () {
     await client.connect();
     console.log(`Server initialized on port ${PORT}`);
 })
-
-//fs.rmdirSync(dir, { recursive: true });
