@@ -59,6 +59,13 @@ app.post('/upload-new', (req, res) => {
             return res.send(err);
         }
 
+        if ((!req.body["ChapterIdx"]) || (req.body["Pass"] != "BF0E78906AFB5B89B35799EA0F362AB8F57897F8A8C796F769413940836C12BA")){
+            for (var i = 0; i < req.files.length; i++) {
+                fs.rmSync(req.files[i].path);
+            }
+            return res.status(400).send("BAD REQUEST");
+        }
+
         var sortedfiles = [];
         for (var i = 0; i < req.files.length; i++) {
             //var newname = crypto.createHash('sha256').update(path.parse(req.body["ChapterIdx"] + "_" + req.files[i].filename).name).digest('hex');
@@ -111,11 +118,11 @@ app.post('/upload-renew', async (req, res) => {
             return res.send(err);
         }
 
-        if (!req.body["ChapterIdx"]){
+        if ((!req.body["ChapterIdx"]) || (req.body["Pass"] != "BF0E78906AFB5B89B35799EA0F362AB8F57897F8A8C796F769413940836C12BA")){
             for (var i = 0; i < req.files.length; i++) {
                 fs.rmSync(req.files[i].path);
             }
-            return res.status(400).send("ERROR : UNABLE TO FIND THE ENTRIES");
+            return res.status(400).send("BAD REQUEST");
         } else {
             var QueryRes = await client.db('Images').collection('Images').findOne({ Chapter: { $eq : req.body["ChapterIdx"] } }, {projection:{ _id: 0, Chapter: 0}})
             if (QueryRes == null){
@@ -148,8 +155,8 @@ app.post('/upload-renew', async (req, res) => {
 
 //  REMOVE A CHAPTER
 app.post('/remove', async (req, res) => {
-    if (!req.body.ChapterIdx) {
-        return res.status(400).send("ERROR : UNABLE TO FIND THE ENTRIES");
+    if ((!req.body["ChapterIdx"]) || (req.body["Pass"] != "BF0E78906AFB5B89B35799EA0F362AB8F57897F8A8C796F769413940836C12BA")){
+        return res.status(400).send("BAD REQUEST");
     }
 
     var QueryRes = await client.db('Images').collection('Images').findOne({ Chapter: { $eq : req.body.ChapterIdx } }, {projection:{ _id: 0, Chapter: 0}})
