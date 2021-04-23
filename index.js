@@ -29,6 +29,12 @@ exports.imageFilter = imageFilter;
 
 
 
+/*
+    Db 'Images' Collection 'Images'
+*/
+
+
+
 //-------------------------------------------------- IMAGE HOSTING SERVICE --------------------------------------------------
 //  UPLOAD NEW CHAPTER
 app.post('/upload-new', (req, res) => {
@@ -85,7 +91,7 @@ app.post('/upload-new', (req, res) => {
         //console.log(JSON.stringify(sortedfiles));
         //console.log(req.body["ChapterIdx"]);
 
-        res.send("OK");
+        res.sendFile( __dirname + "/Ok.html");
     });
 });
 
@@ -148,7 +154,7 @@ app.post('/upload-renew', async (req, res) => {
             });
             client.db('Images').collection('Images').updateOne({ Chapter: { $eq : req.body["ChapterIdx"] } }, { $set: { TimeStamp: Date.now(), Entries: JSON.parse(JSON.stringify(sortedfiles)) } });
     
-            res.send("OK");
+            res.sendFile( __dirname + "/Ok.html");
         }
     });
 });
@@ -170,8 +176,7 @@ app.post('/remove', async (req, res) => {
     
     client.db('Images').collection('Images').deleteOne({ Chapter: { $eq : req.body.ChapterIdx } });
 
-    res.send("OK");
-
+    res.sendFile( __dirname + "/Ok.html");
 });
 
 //  FETCH IMAGE
